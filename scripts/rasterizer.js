@@ -96,18 +96,28 @@ service = server.listen(port, function(request, response) {
     return response.close();
   }
   page.open(url, function(status) {
-    if (status == 'success') {
+    if (status != 'success') {
+      response.write('Error: Url returned status ' + status + ' - ' + page.error_reason + "\n");
+      page.release();
+      response.close();
+    } else {
+		page.evaluate(function () {
+			/* scale the whole body */
+			document.body.style.webkitTransform = "scale(2)";
+			document.body.style.webkitTransformOrigin = "0% 0%";
+			/* fix the body width that overflows out of the viewport */
+			document.body.style.width = "50%";
+		});
+
       window.setTimeout(function () {
         page.render(path);
         response.write('Success: Screenshot saved to ' + path + "\n");
         page.release();
         response.close();
       }, delay);
-    } else {
-      response.write('Error: Url returned status ' + status + ' - ' + page.error_reason + "\n");
-      page.release();
-      response.close();
     }
+
+
   });
   // must start the response now, or phantom closes the connection
   response.statusCode = 200;
